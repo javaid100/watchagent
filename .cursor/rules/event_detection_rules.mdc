@@ -1,0 +1,231 @@
+# WatchAgent – Event Detection Rules (STRICT CONTRACT)
+
+These rules define how event detection MUST be generated and implemented in this project. Cursor MUST follow these rules when creating or modifying event detection logic.
+
+---
+
+# 1. EVENT DETECTION ROLE (STRICT SCOPE)
+
+- Event detection logic MUST ONLY exist inside `pipeline.py` event layer functions.
+- Event detection MUST NOT:
+  - perform API calls
+  - perform database writes
+  - perform polling operations
+  - modify global state
+
+- Event detection MUST be PURE logic (input → output only).
+
+---
+
+# 2. EVENT PIPELINE EXECUTION RULE (MANDATORY ORDER)
+
+Event detection MUST follow this exact sequence:
+
+1. Retrieve recent readings for city
+2. Validate minimum history requirement
+3. Compute statistical baseline (mean, std deviation)
+4. Evaluate each event type independently
+5. Aggregate results into event list
+6. Return list of events
+
+❗ ORDER MUST NOT CHANGE
+
+---
+
+# 3. MINIMUM HISTORY RULE
+
+- If historical readings < `MIN_HISTORY_POINTS`:
+  - detect_events() MUST return `[]`
+  - MUST NOT raise exceptions
+  - MUST NOT attempt calculations
+
+---
+
+# 4. STATISTICAL EVENT RULES
+
+## 4.1 Temperature Anomaly
+
+- MUST use:
+  - rolling mean (recent readings only)
+  - standard deviation
+  - z-score calculation
+
+Formula MUST follow:
+
+- z = |(value - mean) / std|
+
+Rules:
+- MUST trigger only if z >= `ANOMALY_ZSCORE_THRESHOLD`
+- MUST classify severity:
+  - MEDIUM: z >= 2
+  - HIGH: z >= 3
+
+❗ MUST NOT use:
+- single-point comparison
+- hardcoded thresholds outside constants
+
+---
+
+## 4.2 Wind Spike Detection
+
+- MUST use ONLY wind history
+- MUST NOT reuse temperature calculations
+- MUST compute independent mean/std/z-score
+- MUST follow same z-score logic as temperature
+
+---
+
+## 4.3 Precipitation Event
+
+- MUST trigger ONLY when:
+  - precipitation > `HEAVY_PRECIPITATION_MM`
+  OR
+  - weather_code indicates precipitation via `is_precipitation()`
+
+- MUST NOT depend on temperature or wind logic
+
+---
+
+## 4.4 Cross-City Temperature Comparison
+
+- MUST compare ONLY latest readings between cities
+- MUST trigger when:
+  - temperature difference >= `CROSS_CITY_TEMP_GAP_C`
+
+- MUST NOT use historical averages
+
+---
+
+# 5. EVENT FUNCTION DESIGN RULES (STRICT)
+
+Each event type MUST be implemented as a SEPARATE helper function:
+
+- `_temperature_event()`
+- `_wind_event()`
+- `_precipitation_event()`
+- `_weather_change_event()`
+- `_cross_city_events()`
+
+❗ RULES:
+- MUST return `(event_type, description)` OR `None`
+- MUST NOT contain DB logic
+- MUST NOT call other event functions internally
+- MUST remain stateless
+
+---
+
+# 6. EVENT OBJECT RULES
+
+Every event MUST contain:
+
+- city
+- event_type
+- description
+
+Timestamp MUST be handled by database layer (NOT event logic).
+
+---
+
+## 6.1 Description Format Rule
+
+Event descriptions MUST:
+
+- be human-readable
+- include observed value
+- include comparison baseline
+- explain trigger reason
+
+❗ MUST NOT include:
+- raw debug structures
+- intermediate calculations
+- internal variables
+
+---
+
+# 7. DEDUPLICATION RULES (REFERENCE ONLY)
+
+- Duplicate readings MUST NOT be processed by event engine
+- Deduplication MUST occur BEFORE event detection is called
+- Event engine MUST assume input is already unique
+
+❗ Event detection MUST NOT implement deduplication logic
+
+---
+
+# 8. DATABASE RULES (STRICT SEPARATION)
+
+Event detection MUST NOT:
+
+- write to database
+- commit transactions
+- refresh ORM objects
+- manage sessions
+
+❗ Event detection MUST remain DB-agnostic
+
+---
+
+# 9. STABILITY RULES
+
+Event detection MUST safely handle:
+
+- insufficient history
+- std deviation = 0
+- missing fields in readings
+
+Rules:
+- MUST NOT crash under any condition
+- MUST return empty list on invalid input
+- MUST use safe z-score logic (return None if std <= 0)
+
+---
+
+# 10. LOGGING RULES (EVENT LAYER ONLY)
+
+Event detection MAY log:
+
+- start of detection
+- number of events generated
+
+Format:
+
+```
+[EVENT_DETECTION_START] city=<city>
+[EVENT_DETECTION_DONE] city=<city> events=<count>
+```
+
+❗ MUST NOT:
+- log polling failures
+- log database errors
+- log retry attempts
+
+(these belong to polling layer)
+
+---
+
+# 11. ARCHITECTURE RULES (STRICT)
+
+- `pipeline.py` event layer MUST remain PURE logic layer
+- Event detection MUST NOT depend on:
+  - API services
+  - polling service
+  - FastAPI routes
+  - DB session lifecycle
+
+- All event logic MUST be:
+  - deterministic
+  - stateless
+  - testable independently
+
+---
+
+# 12. CODE STYLE RULES
+
+- Each event function MUST be small and single-purpose
+- NO monolithic detect_events logic allowed for individual event types
+- Repeated logic MUST be extracted into helper functions
+- Event functions MUST return consistent tuple format or None
+
+---
+
+# END OF RULE CONTRACT

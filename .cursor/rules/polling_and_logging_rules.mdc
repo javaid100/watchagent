@@ -1,0 +1,201 @@
+# WatchAgent – Polling & Logging Rule Contract
+
+These rules define mandatory behavior for all polling, event detection, logging, and pipeline code in this project. Cursor MUST follow these rules when generating or modifying code.
+
+---
+
+# 1. POLLING ARCHITECTURE (STRICT)
+
+## 1.1 Role Separation
+- polling_service.py MUST ONLY handle orchestration
+- It MUST NOT contain:
+  - event detection logic
+  - statistical logic
+  - ORM model definitions
+  - data transformation logic
+
+---
+
+## 1.2 Required Polling Loop Structure
+
+ALL polling implementations MUST follow this pattern:
+
+```python
+for city in cities:
+    db = SessionLocal()
+    try:
+        weather = fetch_weather(city)
+
+        if is_duplicate(db, city, weather):
+            log_info("[DUPLICATE_SKIPPED] city=" + city)
+            continue
+
+        reading = save_reading(db, weather)
+        events = detect_events(db, city, weather)
+
+        if events:
+            save_events(db, city, events)
+
+    except Exception as e:
+        log_error("[POLL_FAILURE] city=" + city + " error=" + str(e))
+
+    finally:
+        db.close()
+```
+
+Rules:
+- NEVER change execution order
+- ALWAYS deduplicate before saving
+- NEVER allow exceptions to escape city loop
+- ALWAYS isolate each city in try/except
+
+---
+
+# 2. FAILURE HANDLING (STRICT)
+
+- Failure in one city MUST NOT stop polling other cities
+- ALL exceptions inside city loop MUST be caught
+
+Required log format:
+
+```
+[POLL_FAILURE] city=<city> error=<message>
+```
+
+Rules:
+- NEVER crash polling loop
+- NEVER silently ignore exceptions
+- NEVER rethrow exceptions from city loop
+
+---
+
+# 3. RETRY RULES
+
+- Retry logic MUST be bounded
+- MUST use asyncio.sleep (never blocking sleep)
+- Retry count MUST come from configuration
+
+Retry log format:
+
+```
+[FETCH_RETRY] city=<city> attempt=<n>
+```
+
+After retry failure:
+- MUST log warning
+- MUST NOT crash system
+
+---
+
+# 4. LOGGING CONTRACT (STRICT)
+
+ALL logs MUST follow:
+
+```
+[EVENT_TYPE] key=value key=value
+```
+
+Allowed EVENT_TYPE values:
+- POLL_FAILURE
+- READING_SAVED
+- EVENT_CREATED
+- DUPLICATE_SKIPPED
+- FETCH_RETRY
+- NO_EVENTS
+
+Log rules:
+- INFO for success
+- WARNING for recoverable issues
+- ERROR for unexpected failures
+- NO multiline logs
+- NO unstructured prints
+
+---
+
+# 5. PROCESSING PIPELINE ORDER (MANDATORY)
+
+Every city cycle MUST follow:
+
+1. fetch weather
+2. deduplicate
+3. save reading
+4. detect events
+5. save events
+
+Rules:
+- Order MUST NEVER change
+- Duplicate readings MUST NOT trigger event detection
+- Event detection MUST only run after saving reading
+
+---
+
+# 6. DEDUPLICATION RULES
+
+- MUST run before saving reading
+- MUST compare only latest city reading
+- MUST skip duplicates
+
+Log format:
+```
+[DUPLICATE_SKIPPED] city=<city>
+```
+
+---
+
+# 7. DATABASE RULES
+
+- Session MUST be created per city
+- Session MUST be closed in finally block
+- Commit ONLY after successful creation
+- MUST rollback on DB error
+- DB failures MUST NOT crash polling loop
+
+---
+
+# 8. EVENT ENGINE RULES
+
+- Event detection MUST NOT break polling flow
+- Failure in event detection MUST NOT stop pipeline
+
+Event format:
+```
+(event_type: str, description: str)
+```
+
+---
+
+# 9. ASYNC RULES
+
+- MUST use async/await everywhere possible
+- MUST use asyncio.sleep (NOT time.sleep)
+- MUST NOT block polling loop
+- MUST NOT run uncontrolled parallel tasks
+
+---
+
+# 10. CONFIGURATION RULES
+
+NEVER hardcode:
+- cities
+- polling interval
+- retry limits
+- API timeout
+- endpoints
+
+ALL must come from settings.
+
+---
+
+# 11. STABILITY RULES
+
+System MUST be resilient to:
+- API failure
+- malformed responses
+- DB errors
+- timeout errors
+- event failures
+
+System MUST:
+- continue polling indefinitely
+- recover automatically on next cycle
+- never crash due to single-city failure
