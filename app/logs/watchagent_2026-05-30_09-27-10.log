@@ -1,0 +1,13 @@
+2026-05-30 09:27:10 | INFO | watchagent | [POLLING_SERVICE_STARTED]
+2026-05-30 09:27:10 | INFO | watchagent | [POLL_CYCLE_START]
+2026-05-30 09:27:10 | INFO | watchagent | [FETCH_WEATHER] city=ottawa
+2026-05-30 09:27:10 | INFO | watchagent | [POLLING_SERVICE_STARTED]
+2026-05-30 09:27:10 | INFO | watchagent | [POLL_CYCLE_START]
+2026-05-30 09:27:10 | INFO | watchagent | [FETCH_WEATHER] city=ottawa
+2026-05-30 09:27:11 | INFO | watchagent | [POLLING_SERVICE_STARTED]
+2026-05-30 09:27:11 | INFO | watchagent | [POLL_CYCLE_START]
+2026-05-30 09:27:11 | INFO | watchagent | [FETCH_WEATHER] city=ottawa
+2026-05-30 09:27:12 | INFO | watchagent | [EVENT_DETECTION_START] city=toronto
+2026-05-30 09:27:12 | INFO | watchagent | [EVENT_DETECTION_DONE] city=toronto events=1
+2026-05-30 09:27:12 | INFO | watchagent | [EVENT_DETECTION_START] city=toronto
+2026-05-30 09:27:12 | INFO | watchagent | [SKIP] insufficient history city=toronto
