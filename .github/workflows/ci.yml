@@ -69,4 +69,4 @@ jobs:
           done
 
       - name: Run Tests
-        run: pytest -v
+        run: pytest -v --disable-warnings --maxfail=1 -W ignore::UserWarning -W ignore::DeprecationWarning
