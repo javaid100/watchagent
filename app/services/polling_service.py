@@ -9,8 +9,7 @@ from app.services.pipeline import (
     save_events,
 )
 from app.core.config import settings
-from app.core.logging import log_info, log_exception
-
+from app.core.logging import log_info, log_error, log_exception
 
 CITIES = ["ottawa", "toronto", "vancouver"]
 

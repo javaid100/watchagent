@@ -1,0 +1,41 @@
+2026-05-28 23:04:00 | INFO | watchagent | [POLLING_SERVICE_STARTED]
+2026-05-28 23:04:00 | INFO | watchagent | [POLL_CYCLE_START]
+2026-05-28 23:04:00 | INFO | watchagent | [FETCH_WEATHER] city=ottawa
+2026-05-28 23:04:01 | INFO | watchagent | [READING_SAVED] city=ottawa id=32
+2026-05-28 23:04:01 | INFO | watchagent | [EVENT_DETECTION_START] city=ottawa
+2026-05-28 23:04:01 | INFO | watchagent | [EVENT_DETECTION_DONE] city=ottawa events=2
+2026-05-28 23:04:01 | INFO | watchagent | [SAVE_EVENTS_START] city=ottawa count=2
+2026-05-28 23:04:01 | ERROR | watchagent | [POLL_FAILURE] city=ottawa error=(psycopg2.errors.DatatypeMismatch) column "city" is of type cityenum but expression is of type character varying
+LINE 1: ...NTO events (city, event_type, description) SELECT p0::VARCHA...
+                                                             ^
+HINT:  You will need to rewrite or cast the expression.
+
+[SQL: INSERT INTO events (city, event_type, description) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR FROM (VALUES (%(city__0)s, %(event_type__0)s, %(description__0)s, 0), (%(city__1)s, %(event_type__1)s, %(description__1)s, 1)) AS imp_sen(p0, p1, p2, sen_counter) ORDER BY sen_counter RETURNING events.id, events.timestamp, events.id AS id__1]
+[parameters: {'city__0': 'ottawa', 'event_type__0': 'temp_anomaly', 'description__0': 'Clear sky context ignored | Temperature anomaly in ottawa: 13.5°C vs 16.1°C (severity=MEDIUM)', 'city__1': 'ottawa', 'event_type__1': 'cross_city_temp_gap', 'description__1': 'Ottawa is 9.5°C colder than Vancouver'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-05-28 23:04:01 | INFO | watchagent | [FETCH_WEATHER] city=toronto
+2026-05-28 23:04:02 | INFO | watchagent | [READING_SAVED] city=toronto id=33
+2026-05-28 23:04:02 | INFO | watchagent | [EVENT_DETECTION_START] city=toronto
+2026-05-28 23:04:02 | INFO | watchagent | [EVENT_DETECTION_DONE] city=toronto events=2
+2026-05-28 23:04:02 | INFO | watchagent | [SAVE_EVENTS_START] city=toronto count=2
+2026-05-28 23:04:02 | ERROR | watchagent | [POLL_FAILURE] city=toronto error=(psycopg2.errors.DatatypeMismatch) column "city" is of type cityenum but expression is of type character varying
+LINE 1: ...NTO events (city, event_type, description) SELECT p0::VARCHA...
+                                                             ^
+HINT:  You will need to rewrite or cast the expression.
+
+[SQL: INSERT INTO events (city, event_type, description) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR FROM (VALUES (%(city__0)s, %(event_type__0)s, %(description__0)s, 0), (%(city__1)s, %(event_type__1)s, %(description__1)s, 1)) AS imp_sen(p0, p1, p2, sen_counter) ORDER BY sen_counter RETURNING events.id, events.timestamp, events.id AS id__1]
+[parameters: {'city__0': 'toronto', 'event_type__0': 'temp_anomaly', 'description__0': 'Clear sky context ignored | Temperature anomaly in toronto: 12.6°C vs 15.8°C (severity=MEDIUM)', 'city__1': 'toronto', 'event_type__1': 'cross_city_temp_gap', 'description__1': 'Toronto is 10.4°C colder than Vancouver'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-05-28 23:04:02 | INFO | watchagent | [FETCH_WEATHER] city=vancouver
+2026-05-28 23:04:03 | INFO | watchagent | [READING_SAVED] city=vancouver id=34
+2026-05-28 23:04:03 | INFO | watchagent | [EVENT_DETECTION_START] city=vancouver
+2026-05-28 23:04:03 | INFO | watchagent | [EVENT_DETECTION_DONE] city=vancouver events=3
+2026-05-28 23:04:03 | INFO | watchagent | [SAVE_EVENTS_START] city=vancouver count=3
+2026-05-28 23:04:03 | ERROR | watchagent | [POLL_FAILURE] city=vancouver error=(psycopg2.errors.DatatypeMismatch) column "city" is of type cityenum but expression is of type character varying
+LINE 1: ...NTO events (city, event_type, description) SELECT p0::VARCHA...
+                                                             ^
+HINT:  You will need to rewrite or cast the expression.
+
+[SQL: INSERT INTO events (city, event_type, description) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR FROM (VALUES (%(city__0)s, %(event_type__0)s, %(description__0)s, 0), (%(city__1)s, %(event_type__1)s, %(description__1)s, 1), (%(city__2)s, %(event_type__2)s, %(description__2)s, 2)) AS imp_sen(p0, p1, p2, sen_counter) ORDER BY sen_counter RETURNING events.id, events.timestamp, events.id AS id__1]
+[parameters: {'city__0': 'vancouver', 'event_type__0': 'temp_anomaly', 'description__0': 'Clear sky context ignored | Temperature anomaly in vancouver: 21.3°C vs 23.5°C (severity=MEDIUM)', 'city__1': 'vancouver', 'event_type__1': 'wind_spike', 'description__1': 'Wind spike in vancouver: 2.8 km/h vs 7.4 km/h (severity=MEDIUM)', 'city__2': 'vancouver', 'event_type__2': 'cross_city_temp_gap', 'description__2': 'Vancouver is 8.7°C warmer than Toronto'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)

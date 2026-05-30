@@ -3,6 +3,7 @@ from app.api.health import router as health_router
 from app.database.init_db import init_db, SessionLocal
 from app.database.models import Reading, Event, CityEnum
 from app.services.polling_service import start_polling
+import os
 import asyncio
 
 app = FastAPI(title="WatchAgent Weather Monitor")
@@ -25,8 +26,11 @@ async def startup_event():
     print("\n--- FASTAPI STARTUP EVENT FIRED ---")
     print("Initializing database...")
     init_db()
-    print("Launching background weather poller...\n")
-    asyncio.create_task(start_polling())
+    print("Database initialized successfully.")
+    # Only run poller locally
+    if not os.getenv("RUNNING_IN_DOCKER"):
+        print("Starting poller locally...")
+        asyncio.create_task(start_polling())
 
 # -----------------------------
 # ROUTES

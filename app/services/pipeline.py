@@ -20,19 +20,11 @@ CROSS_CITY_TEMP_GAP_C = 8
 # DEDUPLICATION
 # =========================================================
 def is_duplicate(db: Session, city: str, new_reading: dict) -> bool:
-    last = (
-        db.query(Reading)
-        .filter(Reading.city == CityEnum(city))
-        .order_by(Reading.timestamp.desc())
-        .first()
-    )
-
+    last = (db.query(Reading).filter(Reading.city == CityEnum(city)).order_by(Reading.timestamp.desc()).first())
     if not last:
         return False
-
     def close(a, b, tol=0.01):
         return abs(a - b) <= tol
-
     return (
         close(last.temperature, new_reading["temperature"])
         and close(last.apparent_temperature, new_reading["apparent_temperature"])
@@ -54,11 +46,9 @@ def save_reading(db: Session, data: dict) -> Reading:
         wind_speed=data["wind_speed"],
         weather_code=data["weather_code"],
     )
-
     db.add(reading)
     db.commit()
     db.refresh(reading)
-
     return reading
 
 
@@ -66,29 +56,15 @@ def save_reading(db: Session, data: dict) -> Reading:
 # HISTORY
 # =========================================================
 def get_recent_readings(db: Session, city: str, limit: int = 10):
-    return (
-        db.query(Reading)
-        .filter(Reading.city == CityEnum(city))
-        .order_by(Reading.timestamp.desc())
-        .limit(limit)
-        .all()
-    )
-
+    return (db.query(Reading).filter(Reading.city == CityEnum(city)).order_by(Reading.timestamp.desc()).limit(limit).all())
 
 def get_latest_city_readings(db: Session):
     cities = ["ottawa", "toronto", "vancouver"]
     latest = {}
-
     for c in cities:
-        r = (
-            db.query(Reading)
-            .filter(Reading.city == CityEnum(c))
-            .order_by(Reading.timestamp.desc())
-            .first()
-        )
+        r = (db.query(Reading).filter(Reading.city == CityEnum(c)).order_by(Reading.timestamp.desc()).first())
         if r:
             latest[c] = r
-
     return latest
 
 
@@ -106,12 +82,9 @@ def _zscore(value, mean, std):
 # =========================================================
 def _temperature_event(city, current, avg, std):
     z = _zscore(current, avg, std)
-
     if z is None or z < ANOMALY_ZSCORE_THRESHOLD:
         return None
-
     severity = "HIGH" if z >= HIGH_SEVERITY_ZSCORE else "MEDIUM"
-
     return (
         "temp_anomaly",
         f"{get_weather_description(0)} context ignored | "
@@ -125,17 +98,10 @@ def _temperature_event(city, current, avg, std):
 # =========================================================
 def _wind_event(city, current, avg, std):
     z = _zscore(current, avg, std)
-
     if z is None or z < ANOMALY_ZSCORE_THRESHOLD:
         return None
-
     severity = "HIGH" if z >= HIGH_SEVERITY_ZSCORE else "MEDIUM"
-
-    return (
-        "wind_spike",
-        f"Wind spike in {city}: {current} km/h vs {avg:.1f} km/h "
-        f"(severity={severity})",
-    )
+    return ("wind_spike", f"Wind spike in {city}: {current} km/h vs {avg:.1f} km/h (severity={severity})")
 
 
 # =========================================================
@@ -144,7 +110,6 @@ def _wind_event(city, current, avg, std):
 def _weather_change_event(last_code, new_code):
     if last_code == new_code:
         return None
-
     return (
         "weather_change",
         f"Weather changed from "
@@ -161,13 +126,7 @@ def _weather_change_event(last_code, new_code):
 def _precipitation_event(city, precip, weather_code):
     if precip <= HEAVY_PRECIPITATION_MM and not is_precipitation(weather_code):
         return None
-
-    return (
-        "heavy_precipitation",
-        f"Heavy precipitation in {city}: {precip} mm "
-        f"({get_weather_description(weather_code)})",
-    )
-
+    return ("heavy_precipitation", f"Heavy precipitation in {city}: {precip} mm ({get_weather_description(weather_code)})")
 
 # =========================================================
 # EVENT: CROSS CITY TEMP GAP
@@ -175,23 +134,13 @@ def _precipitation_event(city, precip, weather_code):
 def _cross_city_events(db: Session, city: str, current_temp: float):
     events = []
     latest = get_latest_city_readings(db)
-
     for other, reading in latest.items():
         if other == city:
             continue
-
         diff = abs(current_temp - reading.temperature)
-
         if diff >= CROSS_CITY_TEMP_GAP_C:
             direction = "warmer" if current_temp > reading.temperature else "colder"
-
-            events.append(
-                (
-                    "cross_city_temp_gap",
-                    f"{city.capitalize()} is {diff:.1f}°C {direction} than {other.capitalize()}",
-                )
-            )
-
+            events.append(("cross_city_temp_gap", f"{city.capitalize()} is {diff:.1f}°C {direction} than {other.capitalize()}"))
     return events
 
 
@@ -257,14 +206,10 @@ def save_events(db: Session, city: str, events: list):
     log_info(f"[SAVE_EVENTS_START] city={city} count={len(events)}")
 
     created = []
-    city_enum = CityEnum[city]
+    city_enum = CityEnum(city)
 
     for event_type, description in events:
-        ev = Event(
-            city=city_enum,
-            event_type=event_type,
-            description=description,
-        )
+        ev = Event(city=city_enum, event_type=event_type, description=description)
         db.add(ev)
         created.append(ev)
 
