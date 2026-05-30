@@ -67,7 +67,6 @@ jobs:
       - name: Run tests
         run: pytest -v --disable-warnings --maxfail=1 -W ignore::UserWarning -W ignore::DeprecationWarning
 
-
   build:
     name: Docker Build
     runs-on: ubuntu-latest
