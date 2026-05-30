@@ -17,7 +17,16 @@ def run_pytest():
     print("==============================\n")
 
     start_time = datetime.now()
-    result = subprocess.run([sys.executable, "-m", "pytest", "-v", "--disable-warnings", "--maxfail=1"])
+    result = subprocess.run([
+        sys.executable,
+        "-m",
+        "pytest",
+        "-v",
+        "--disable-warnings",
+        "--maxfail=1",
+        "-W", "ignore::UserWarning",
+        "-W", "ignore::DeprecationWarning"
+    ])
     end_time = datetime.now()
 
     print("\n==============================")
