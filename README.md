@@ -431,7 +431,7 @@ Create `.env`
 POSTGRES_USER=watchagent
 POSTGRES_PASSWORD=watchagentpassword
 POSTGRES_DB=watchagent
-POSTGRES_HOST=postgres
+POSTGRES_HOST=db
 POSTGRES_PORT=5432
 
 API_PORT=8000
